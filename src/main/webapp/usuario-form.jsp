@@ -34,6 +34,22 @@
         .strength-weak { color: #dc3545; }
         .strength-medium { color: #ffc107; }
         .strength-strong { color: #28a745; }
+        .role-option {
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .role-option:hover {
+            border-color: #007bff;
+            background-color: #f8f9fa;
+        }
+        .role-option.selected {
+            border-color: #007bff;
+            background-color: #e7f3ff;
+        }
     </style>
 </head>
 <body>
@@ -205,24 +221,44 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label for="rol" class="form-label">
+                                        <label class="form-label">
                                             <i class="fas fa-user-tag me-1 text-secondary"></i>
                                             Rol del Usuario <span class="text-danger">*</span>
                                         </label>
-                                        <select class="form-select form-select-lg" id="rol" name="rol" required>
-                                            <option value="">Seleccione un rol</option>
-                                            <option value="usuario" ${usuario.rol == 'usuario' ? 'selected' : ''}>
-                                                👤 Usuario (Lector)
-                                            </option>
-                                            <option value="admin" ${usuario.rol == 'admin' ? 'selected' : ''}>
-                                                🛡️ Administrador
-                                            </option>
-                                        </select>
-                                        <small class="form-text text-muted">
-                                            Los administradores pueden gestionar libros y usuarios
-                                        </small>
+                                        
+                                        <!-- Opciones de rol mejoradas -->
+                                        <div class="role-options">
+                                            <div class="role-option" onclick="selectRole('lector')" id="role-lector">
+                                                <input type="radio" name="rol" value="lector" id="rol-lector" 
+                                                       ${usuario.rol == 'lector' || empty usuario.rol ? 'checked' : ''} style="display: none;">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="me-3">
+                                                        <i class="fas fa-user fa-2x text-success"></i>
+                                                    </div>
+                                                    <div>
+                                                        <h6 class="mb-1">👤 Lector</h6>
+                                                        <small class="text-muted">Puede buscar libros, solicitar préstamos y gestionar sus devoluciones</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="role-option" onclick="selectRole('admin')" id="role-admin">
+                                                <input type="radio" name="rol" value="admin" id="rol-admin" 
+                                                       ${usuario.rol == 'admin' ? 'checked' : ''} style="display: none;">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="me-3">
+                                                        <i class="fas fa-user-shield fa-2x text-danger"></i>
+                                                    </div>
+                                                    <div>
+                                                        <h6 class="mb-1">🛡️ Administrador</h6>
+                                                        <small class="text-muted">Acceso completo: gestión de libros, usuarios, préstamos y reportes</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
+
                                 <div class="col-md-6">
                                     <c:if test="${accion == 'nuevo'}">
                                         <div class="mb-3">
@@ -316,7 +352,7 @@
                                 </h6>
                             </div>
                             <div class="card-body">
-                                <p class="mb-1"><i class="fas fa-user me-2 text-primary"></i><strong>Usuario:</strong> Puede buscar libros y gestionar sus préstamos</p>
+                                <p class="mb-1"><i class="fas fa-user me-2 text-success"></i><strong>Lector:</strong> Puede buscar libros y gestionar sus préstamos</p>
                                 <p class="mb-0"><i class="fas fa-user-shield me-2 text-danger"></i><strong>Admin:</strong> Acceso completo al sistema, gestión de libros y usuarios</p>
                             </div>
                         </div>
@@ -328,6 +364,36 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // Función para seleccionar rol
+        function selectRole(role) {
+            // Limpiar selecciones anteriores
+            document.querySelectorAll('.role-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            
+            // Limpiar radio buttons
+            document.querySelectorAll('input[name="rol"]').forEach(radio => {
+                radio.checked = false;
+            });
+            
+            // Seleccionar el rol clickeado
+            document.getElementById('role-' + role).classList.add('selected');
+            document.getElementById('rol-' + role).checked = true;
+            
+            console.log('Rol seleccionado:', role);
+        }
+
+        // Inicializar la selección visual al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            const rolSeleccionado = document.querySelector('input[name="rol"]:checked');
+            if (rolSeleccionado) {
+                selectRole(rolSeleccionado.value);
+            } else {
+                // Seleccionar "lector" por defecto
+                selectRole('lector');
+            }
+        });
+
         // Función para mostrar/ocultar contraseña
         function togglePassword(fieldId) {
             const field = document.getElementById(fieldId);
@@ -408,6 +474,16 @@
         document.getElementById('usuarioForm').addEventListener('submit', function(e) {
             const documento = document.getElementById('documento').value;
             const correo = document.getElementById('correo').value;
+            const rolSeleccionado = document.querySelector('input[name="rol"]:checked');
+            
+            // Validar que se haya seleccionado un rol
+            if (!rolSeleccionado) {
+                e.preventDefault();
+                alert('Por favor, seleccione un rol para el usuario.');
+                return false;
+            }
+            
+            console.log('Rol enviado en formulario:', rolSeleccionado.value);
             
             // Validar documento (solo números)
             if (!/^\d+$/.test(documento)) {
@@ -437,7 +513,7 @@
                     document.getElementById('documento').value = '${usuario.documento}';
                     document.getElementById('correo').value = '${usuario.correo}';
                     document.getElementById('telefono').value = '${usuario.telefono}';
-                    document.getElementById('rol').value = '${usuario.rol}';
+                    selectRole('${usuario.rol}');
                 </c:if>
             }
         }

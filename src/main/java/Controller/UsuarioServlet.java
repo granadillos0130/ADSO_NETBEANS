@@ -215,116 +215,137 @@ public class UsuarioServlet extends HttpServlet {
     /**
      * Crea un nuevo usuario
      */
-    private void crearUsuario(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+    /**
+ * Crea un nuevo usuario - MÉTODO CORREGIDO
+ */
+private void crearUsuario(HttpServletRequest request, HttpServletResponse response)
+        throws ServletException, IOException {
+    
+    System.out.println("👤 crearUsuario() - Iniciando creación de usuario");
+    
+    // Verificar autenticación y permisos de admin
+    if (!LoginServlet.usuarioEstaLogueado(request) || !LoginServlet.usuarioEsAdmin(request)) {
+        System.out.println("❌ Usuario no autorizado para crear usuarios");
+        response.sendRedirect(request.getContextPath() + "/login");
+        return;
+    }
+    
+    try {
+        // Obtener datos del formulario
+        String nombre = request.getParameter("nombre");
+        String documento = request.getParameter("documento");
+        String correo = request.getParameter("correo");
+        String telefono = request.getParameter("telefono");
+        String contrasena = request.getParameter("contrasena");
+        String rol = request.getParameter("rol");
         
-        System.out.println("👤 crearUsuario() - Iniciando creación de usuario");
+        System.out.println("📝 Datos recibidos:");
+        System.out.println("   - Nombre: " + nombre);
+        System.out.println("   - Documento: " + documento);
+        System.out.println("   - Correo: " + correo);
+        System.out.println("   - Teléfono: " + telefono);
+        System.out.println("   - Rol: '" + rol + "'");
         
-        // Verificar autenticación y permisos de admin
-        if (!LoginServlet.usuarioEstaLogueado(request) || !LoginServlet.usuarioEsAdmin(request)) {
-            System.out.println("❌ Usuario no autorizado para crear usuarios");
-            response.sendRedirect(request.getContextPath() + "/login");
+        // Validar datos básicos
+        if (nombre == null || nombre.trim().isEmpty() || 
+            documento == null || documento.trim().isEmpty() ||
+            correo == null || correo.trim().isEmpty() ||
+            contrasena == null || contrasena.trim().isEmpty()) {
+            
+            System.out.println("❌ Datos incompletos");
+            request.setAttribute("error", "Los campos nombre, documento, correo y contraseña son obligatorios");
+            mostrarFormularioNuevo(request, response);
             return;
         }
         
-        try {
-            // Obtener datos del formulario
-            String nombre = request.getParameter("nombre");
-            String documento = request.getParameter("documento");
-            String correo = request.getParameter("correo");
-            String telefono = request.getParameter("telefono");
-            String contrasena = request.getParameter("contrasena");
-            String rol = request.getParameter("rol");
-            
-            System.out.println("📝 Datos recibidos:");
-            System.out.println("   - Nombre: " + nombre);
-            System.out.println("   - Documento: " + documento);
-            System.out.println("   - Correo: " + correo);
-            System.out.println("   - Teléfono: " + telefono);
-            System.out.println("   - Rol: " + rol);
-            
-            // Validar datos básicos
-            if (nombre == null || nombre.trim().isEmpty() || 
-                documento == null || documento.trim().isEmpty() ||
-                correo == null || correo.trim().isEmpty() ||
-                contrasena == null || contrasena.trim().isEmpty()) {
-                
-                System.out.println("❌ Datos incompletos");
-                request.setAttribute("error", "Los campos nombre, documento, correo y contraseña son obligatorios");
+        // CORRECCIÓN: Validar y asignar rol por defecto
+        if (rol == null || rol.trim().isEmpty()) {
+            rol = "lector"; // Rol por defecto
+            System.out.println("⚠️ Rol vacío, asignando rol por defecto: lector");
+        } else {
+            rol = rol.trim();
+            // Validar que el rol sea válido
+            if (!rol.equals("lector") && !rol.equals("admin")) {
+                System.out.println("❌ Rol inválido: " + rol);
+                request.setAttribute("error", "El rol seleccionado no es válido");
                 mostrarFormularioNuevo(request, response);
                 return;
             }
-            
-            // Validar formato de documento (solo números)
-            if (!documento.trim().matches("\\d+")) {
-                System.out.println("❌ Documento inválido: " + documento);
-                request.setAttribute("error", "El documento debe contener solo números");
-                mostrarFormularioNuevo(request, response);
-                return;
-            }
-            
-            // Validar formato de correo
-            if (!correo.trim().matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
-                System.out.println("❌ Correo inválido: " + correo);
-                request.setAttribute("error", "El formato del correo electrónico es inválido");
-                mostrarFormularioNuevo(request, response);
-                return;
-            }
-            
-            // Validar longitud de contraseña
-            if (contrasena.length() < 6) {
-                System.out.println("❌ Contraseña muy corta");
-                request.setAttribute("error", "La contraseña debe tener al menos 6 caracteres");
-                mostrarFormularioNuevo(request, response);
-                return;
-            }
-            
-            // Verificar si el correo ya existe
-            if (usuarioDAO.existeCorreo(correo.trim())) {
-                System.out.println("❌ Correo ya existe: " + correo);
-                request.setAttribute("error", "El correo electrónico ya está registrado");
-                mostrarFormularioNuevo(request, response);
-                return;
-            }
-            
-            // Verificar si el documento ya existe
-            if (usuarioDAO.existeDocumento(documento.trim())) {
-                System.out.println("❌ Documento ya existe: " + documento);
-                request.setAttribute("error", "El documento ya está registrado");
-                mostrarFormularioNuevo(request, response);
-                return;
-            }
-            
-            // Crear objeto UsuarioDTO
-            UsuarioDTO usuario = new UsuarioDTO(
-                nombre.trim(), 
-                documento.trim(), 
-                correo.trim(), 
-                telefono != null ? telefono.trim() : "", 
-                contrasena, 
-                rol != null && !rol.trim().isEmpty() ? rol : "usuario"
-            );
-            
-            System.out.println("💾 Guardando usuario en base de datos...");
-            
-            // Guardar en la base de datos
-            if (usuarioDAO.crearUsuario(usuario)) {
-                System.out.println("✅ Usuario creado exitosamente");
-                request.getSession().setAttribute("mensaje", "Usuario '" + nombre.trim() + "' creado exitosamente");
-                response.sendRedirect(request.getContextPath() + "/usuarios");
-            } else {
-                System.out.println("❌ Error al guardar usuario en BD");
-                request.setAttribute("error", "Error al crear el usuario en la base de datos");
-                mostrarFormularioNuevo(request, response);
-            }
-            
-        } catch (Exception e) {
-            System.err.println("❌ Error inesperado en crearUsuario(): " + e.getMessage());
-            e.printStackTrace();
-            request.setAttribute("error", "Error inesperado: " + e.getMessage());
+        }
+        
+        System.out.println("✅ Rol final asignado: '" + rol + "'");
+        
+        // Validar formato de documento (solo números)
+        if (!documento.trim().matches("\\d+")) {
+            System.out.println("❌ Documento inválido: " + documento);
+            request.setAttribute("error", "El documento debe contener solo números");
+            mostrarFormularioNuevo(request, response);
+            return;
+        }
+        
+        // Validar formato de correo
+        if (!correo.trim().matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
+            System.out.println("❌ Correo inválido: " + correo);
+            request.setAttribute("error", "El formato del correo electrónico es inválido");
+            mostrarFormularioNuevo(request, response);
+            return;
+        }
+        
+        // Validar longitud de contraseña
+        if (contrasena.length() < 6) {
+            System.out.println("❌ Contraseña muy corta");
+            request.setAttribute("error", "La contraseña debe tener al menos 6 caracteres");
+            mostrarFormularioNuevo(request, response);
+            return;
+        }
+        
+        // Verificar si el correo ya existe
+        if (usuarioDAO.existeCorreo(correo.trim())) {
+            System.out.println("❌ Correo ya existe: " + correo);
+            request.setAttribute("error", "El correo electrónico ya está registrado");
+            mostrarFormularioNuevo(request, response);
+            return;
+        }
+        
+        // Verificar si el documento ya existe
+        if (usuarioDAO.existeDocumento(documento.trim())) {
+            System.out.println("❌ Documento ya existe: " + documento);
+            request.setAttribute("error", "El documento ya está registrado");
+            mostrarFormularioNuevo(request, response);
+            return;
+        }
+        
+        // Crear objeto UsuarioDTO con el rol correcto
+        UsuarioDTO usuario = new UsuarioDTO(
+            nombre.trim(), 
+            documento.trim(), 
+            correo.trim(), 
+            telefono != null ? telefono.trim() : "", 
+            contrasena, 
+            rol  // Usar el rol validado
+        );
+        
+        System.out.println("💾 Guardando usuario en base de datos...");
+        System.out.println("   - Rol final del usuario: '" + usuario.getRol() + "'");
+        
+        // Guardar en la base de datos
+        if (usuarioDAO.crearUsuario(usuario)) {
+            System.out.println("✅ Usuario creado exitosamente con rol: " + rol);
+            request.getSession().setAttribute("mensaje", "Usuario '" + nombre.trim() + "' creado exitosamente con rol " + rol);
+            response.sendRedirect(request.getContextPath() + "/usuarios");
+        } else {
+            System.out.println("❌ Error al guardar usuario en BD");
+            request.setAttribute("error", "Error al crear el usuario en la base de datos");
             mostrarFormularioNuevo(request, response);
         }
+        
+    } catch (Exception e) {
+        System.err.println("❌ Error inesperado en crearUsuario(): " + e.getMessage());
+        e.printStackTrace();
+        request.setAttribute("error", "Error inesperado: " + e.getMessage());
+        mostrarFormularioNuevo(request, response);
     }
+}
     
     /**
      * Actualiza un usuario existente
