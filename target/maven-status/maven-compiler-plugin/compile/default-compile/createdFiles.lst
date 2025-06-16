@@ -1,2 +1,16 @@
+Model\Conexion.class
+Utils\CaptchaGenerator.class
 com\mycompany\appbiblioteca\JakartaRestConfiguration.class
+Controller\LoginServlet.class
+DTO\UsuarioDTO.class
+Controller\UsuarioServlet.class
+DAO\UsuarioDAO.class
+DTO\LibroDTO.class
+Controller\LibroServlet.class
+DTO\PrestamoDTO.class
+Controller\CharacterEncodingFilter.class
+Controller\AuthenticationFilter.class
+DAO\LibroDAO.class
+Controller\PrestamoServlet.class
 com\mycompany\appbiblioteca\resources\JakartaEE10Resource.class
+DAO\PrestamoDAO.class
