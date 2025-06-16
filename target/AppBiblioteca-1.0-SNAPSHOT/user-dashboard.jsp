@@ -1,20 +1,3 @@
-<%-- 
-    Document   : user-dashboard
-    Created on : 16/06/2025, 11:55:31 a. m.
-    Author     : HAWLETH
---%>
-
-<%@page contentType="text/html" pageEncoding="UTF-8"%>
-<!DOCTYPE html>
-<html>
-    <head>
-        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <title>JSP Page</title>
-    </head>
-    <body>
-        <h1>Hello World!</h1>
-    </body>
-</html>
 <%@ page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!DOCTYPE html>
@@ -191,10 +174,10 @@
                 <div class="stats-card card text-center" onclick="location.href='${pageContext.request.contextPath}/mis-prestamos'">
                     <div class="card-body">
                         <i class="fas fa-book-open fa-3x text-primary mb-3"></i>
-                        <h3 class="card-title">3</h3>
+                        <h3 class="card-title">${misPrestamosActivos > 0 ? misPrestamosActivos : '0'}</h3>
                         <p class="card-text text-muted">Préstamos Activos</p>
                         <small class="text-info">
-                            <i class="fas fa-clock me-1"></i>1 por vencer pronto
+                            <i class="fas fa-clock me-1"></i>Haz clic para ver detalles
                         </small>
                     </div>
                 </div>
@@ -215,10 +198,10 @@
                 <div class="stats-card card text-center" onclick="location.href='${pageContext.request.contextPath}/libros-buscar'">
                     <div class="card-body">
                         <i class="fas fa-star fa-3x text-warning mb-3"></i>
-                        <h3 class="card-title">25</h3>
+                        <h3 class="card-title">${librosDisponibles > 0 ? librosDisponibles : '0'}</h3>
                         <p class="card-text text-muted">Libros Disponibles</p>
                         <small class="text-warning">
-                            <i class="fas fa-plus me-1"></i>5 nuevos esta semana
+                            <i class="fas fa-plus me-1"></i>Disponibles para préstamo
                         </small>
                     </div>
                 </div>
@@ -409,7 +392,7 @@
                     <div class="card-body">
                         <div class="alert alert-warning">
                             <i class="fas fa-bell me-2"></i>
-                            <strong>Recordatorio:</strong> Tienes 1 libro que vence en 4 días.
+                            <strong>Recordatorio:</strong> Revisa tus préstamos regularmente.
                         </div>
                         <div class="alert alert-info">
                             <i class="fas fa-clock me-2"></i>
@@ -417,7 +400,7 @@
                         </div>
                         <div class="alert alert-success">
                             <i class="fas fa-gift me-2"></i>
-                            <strong>¡Nuevos libros!</strong> Se agregaron 5 títulos esta semana.
+                            <strong>¡Nuevos libros!</strong> Se agregaron nuevos títulos al catálogo.
                         </div>
                     </div>
                 </div>

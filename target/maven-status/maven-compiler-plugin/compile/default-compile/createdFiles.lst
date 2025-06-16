@@ -12,5 +12,6 @@ Controller\CharacterEncodingFilter.class
 Controller\AuthenticationFilter.class
 DAO\LibroDAO.class
 Controller\PrestamoServlet.class
+Controller\DashboardServlet.class
 com\mycompany\appbiblioteca\resources\JakartaEE10Resource.class
 DAO\PrestamoDAO.class

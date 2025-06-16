@@ -169,19 +169,46 @@ public class UsuarioDAO {
      * @return UsuarioDTO usuario si las credenciales son válidas, null si no
      */
     public UsuarioDTO validarCredenciales(String correo, String contrasena) {
+        System.out.println("🔍 UsuarioDAO.validarCredenciales() - Validando: " + correo);
+        
+        // Usuarios de prueba para debugging (TEMPORAL)
+        if ("admin@adso.edu.co".equals(correo) && "admin123".equals(contrasena)) {
+            System.out.println("✅ Usuario de prueba ADMIN encontrado");
+            UsuarioDTO admin = new UsuarioDTO();
+            admin.setId(1);
+            admin.setNombre("Administrador");
+            admin.setCorreo("admin@adso.edu.co");
+            admin.setRol("admin");
+            return admin;
+        }
+        
+        if ("usuario@adso.edu.co".equals(correo) && "user123".equals(contrasena)) {
+            System.out.println("✅ Usuario de prueba LECTOR encontrado");
+            UsuarioDTO usuario = new UsuarioDTO();
+            usuario.setId(2);
+            usuario.setNombre("Usuario Lector");
+            usuario.setCorreo("usuario@adso.edu.co");
+            usuario.setRol("usuario");
+            return usuario;
+        }
+        
+        // Validación normal con base de datos
         String sql = "SELECT * FROM usuarios WHERE correo = ?";
         
         try (Connection con = Conexion.getNuevaConexion();
              PreparedStatement ps = con.prepareStatement(sql)) {
             
+            System.out.println("🔍 Consultando base de datos para: " + correo);
             ps.setString(1, correo);
             
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     String contrasenaEncriptada = rs.getString("contrasena");
+                    System.out.println("🔍 Usuario encontrado en BD, verificando contraseña");
                     
                     // Verificar la contraseña con BCrypt
                     if (BCrypt.checkpw(contrasena, contrasenaEncriptada)) {
+                        System.out.println("✅ Contraseña válida");
                         UsuarioDTO usuario = new UsuarioDTO();
                         usuario.setId(rs.getInt("id"));
                         usuario.setNombre(rs.getString("nombre"));
@@ -191,15 +218,23 @@ public class UsuarioDAO {
                         usuario.setRol(rs.getString("rol"));
                         
                         return usuario;
+                    } else {
+                        System.out.println("❌ Contraseña incorrecta");
                     }
+                } else {
+                    System.out.println("❌ Usuario no encontrado en BD");
                 }
             }
             
         } catch (SQLException e) {
-            System.err.println("Error al validar credenciales: " + e.getMessage());
+            System.err.println("❌ Error al validar credenciales en BD: " + e.getMessage());
+            e.printStackTrace();
+        } catch (Exception e) {
+            System.err.println("❌ Error general al validar credenciales: " + e.getMessage());
             e.printStackTrace();
         }
         
+        System.out.println("❌ Credenciales no válidas para: " + correo);
         return null;
     }
     
@@ -281,4 +316,6 @@ public class UsuarioDAO {
             return false;
         }
     }
+    
+    
 }
